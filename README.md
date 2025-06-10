@@ -53,9 +53,9 @@ stock-trend-prediction/
 ├── README.md               # Project overview
 ├── requirements.txt        # Python dependencies
 ├── output_graphs/         # Prediction and training result visualizations
-│   ├── Output\_1.jpg
-│   ├── Output\_2.jpg
-│   └── ...
+│   ├── 100 and 200.png
+│   ├── 100.png
+│   └── Predicted.png
 
 ````
 
@@ -94,11 +94,13 @@ Make sure you have **Python 3.10+** installed.
 
 ## 📷 Output Visualizations
 
-<p float="left">
-  <img src="output_graphs/Output_1.jpg" width="250"/>
-  <img src="output_graphs/Output_2.jpg" width="250"/>
-  <img src="output_graphs/Output_3.jpg" width="250"/>
-</p>
+<div align="left">
+   <img src="output_graphs/100.png" width="350"/>
+   <img src="output_graphs/100 and 200.png" width="350"/>
+  <img src="output_graphs/Predicted.png" width="350"/>
+  
+</div>
+
 
 ---
 
