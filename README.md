@@ -3,14 +3,13 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.32.0-brightgreen)](https://streamlit.io/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.14-orange)](https://www.tensorflow.org/)
-[![yfinance](https://img.shields.io/badge/yfinance-0.2.33-lightgrey)](https://pypi.org/project/yfinance/)
-<!--Deployment](https://img.shields.io/badge/Deployed-Streamlit-green?logo=streamlit)](https://your-deployment-url.com)  Replace with actual URL if applicable -->
+[![Alpha Vantage](https://img.shields.io/badge/Alpha%20Vantage-API-blue)](https://www.alphavantage.co/)
 
 ---
 
 ## 📌 Overview
 
-🔮 **Stock Trend Prediction App** is a Streamlit-powered web interface that utilizes a pre-trained LSTM model to forecast stock closing prices. It provides interactive data visualizations, moving average analysis, and future trend predictions based on historical time-series data fetched from Yahoo Finance via the `yfinance` API.
+🔮 **Stock Trend Prediction App** is a Streamlit-powered web interface that utilizes a pre-trained LSTM model to forecast stock closing prices. It provides interactive data visualizations, moving average analysis, and future trend predictions based on historical time-series data fetched from Alpha Vantage.
 
 > 🧠 The model (`keras_model.h5`) was trained using a Long Short-Term Memory (LSTM) architecture on historical stock data. The training pipeline is not included in this repository.
 
@@ -28,18 +27,16 @@
 
 ---
 
-
 ## 🛠️ Tech Stack
 
 | Component            | Library / Tool      | |
 |---------------------|---------------------|------|
 | Web Interface        | Streamlit           | ![Streamlit](https://img.shields.io/badge/Streamlit-E83E8C?style=flat&logo=streamlit&logoColor=white) |
 | Deep Learning Model  | TensorFlow / Keras  | ![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat&logo=tensorflow&logoColor=white) |
-| Financial Data       | yfinance            | ![Yahoo Finance](https://img.shields.io/badge/Yahoo_Finance-6001D2?style=flat&logo=yahoo&logoColor=white) |
+| Financial Data       | Alpha Vantage API   | ![Alpha Vantage](https://img.shields.io/badge/Alpha%20Vantage-006699?style=flat&logo=alphavantage&logoColor=white) |
 | Visualization        | matplotlib          | ![Matplotlib](https://img.shields.io/badge/Matplotlib-11557C?style=flat&logo=plotly&logoColor=white) |
 | Data Processing      | pandas, NumPy       | ![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat&logo=pandas&logoColor=white) ![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat&logo=numpy&logoColor=white) |
 | Scaling              | scikit-learn        | ![Scikit-learn](https://img.shields.io/badge/Scikit--Learn-F7931E?style=flat&logo=scikit-learn&logoColor=white) |
-
 
 ---
 
@@ -48,11 +45,11 @@
 ```
 
 stock-trend-prediction/
-├── keras_model.h5          # Trained LSTM model
+├── keras\_model.h5          # Trained LSTM model
 ├── app.py                  # Streamlit application
 ├── README.md               # Project overview
 ├── requirements.txt        # Python dependencies
-├── output_graphs/          # Prediction and training result visualizations
+├── output\_graphs/          # Prediction and training result visualizations
 │   ├── 100 and 200.png
 │   ├── 100.png
 │   └── Predicted.png
@@ -97,10 +94,8 @@ Make sure you have **Python 3.10+** installed.
 <div align="left">
    <img src="output_graphs/100.png" width="350"/>
    <img src="output_graphs/100 and 200.png" width="350"/>
-  <img src="output_graphs/Predicted.png" width="350"/>
-  
+   <img src="output_graphs/Predicted.png" width="350"/>
 </div>
-
 
 ---
 
@@ -121,14 +116,20 @@ The predictions made by this application are the result of a deep learning model
 * Model performance is limited by:
 
   * Quantity and quality of historical data
-  * Latency or inaccuracies from third-party APIs (e.g., `yfinance`)
+  * Latency or inaccuracies from third-party APIs (e.g., Alpha Vantage)
   * Lack of awareness of company fundamentals, breaking news, or macroeconomic indicators
   * Overfitting or underfitting during training
+
 * It **does not account for**:
 
   * Intraday volatility
   * Real-time data streams
   * Sudden market shifts or geopolitical risks
+
+* ⚙️ **Alpha Vantage API Limitations**:
+
+  * Free tier usage is subject to **rate limits (typically 5 requests per minute and 500 per day)**.
+  * Repeated rapid queries may lead to temporary blocking of data access.
 
 ### 📘 Use Responsibly:
 
@@ -148,7 +149,7 @@ If deployed publicly, this app:
 
 * **Does not collect or store personal user data**
 * **Processes ticker inputs locally**
-* Relies on publicly accessible Yahoo Finance data via the `yfinance` API
+* Relies on publicly accessible data via the Alpha Vantage API
 
 > Always validate external API input sources and sanitize ticker symbols in production.
 
