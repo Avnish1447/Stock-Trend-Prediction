@@ -52,7 +52,7 @@ stock-trend-prediction/
 ├── app.py                  # Streamlit application
 ├── README.md               # Project overview
 ├── requirements.txt        # Python dependencies
-├── output_graphs/         # Prediction and training result visualizations
+├── output_graphs/          # Prediction and training result visualizations
 │   ├── 100 and 200.png
 │   ├── 100.png
 │   └── Predicted.png
