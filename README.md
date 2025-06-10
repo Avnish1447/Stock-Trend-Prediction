@@ -45,11 +45,11 @@
 ```
 
 stock-trend-prediction/
-├── keras\_model.h5          # Trained LSTM model
+├── keras_model.h5          # Trained LSTM model
 ├── app.py                  # Streamlit application
 ├── README.md               # Project overview
 ├── requirements.txt        # Python dependencies
-├── output\_graphs/          # Prediction and training result visualizations
+├── output_graphs/          # Prediction and training result visualizations
 │   ├── 100 and 200.png
 │   ├── 100.png
 │   └── Predicted.png
