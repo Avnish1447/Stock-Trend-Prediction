@@ -164,7 +164,7 @@ If you'd like to add features, improve model performance, or extend visualizatio
 ## 🙋 Author
 
 Developed by **@Avnish1447**
-Connect on [LinkedIn](https://www.linkedin.com/in/AvnishAgrawal-4784)
+Connect on [LinkedIn](https://www.linkedin.com/in/avnish-agrawal-84b39728a/)
 Explore more at [GitHub](https://github.com/Avnish1447)
 
 ---
