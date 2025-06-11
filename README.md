@@ -4,6 +4,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.32.0-brightgreen)](https://streamlit.io/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.14-orange)](https://www.tensorflow.org/)
 [![Alpha Vantage](https://img.shields.io/badge/Alpha%20Vantage-API-blue)](https://www.alphavantage.co/)
+[![Deployed on Streamlit](https://img.shields.io/badge/Streamlit-Deployed-success?logo=streamlit&logoColor=white)](https://avnish-stock-trend-prediction.streamlit.app/)
 
 ---
 
