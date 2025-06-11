@@ -23,37 +23,22 @@ def fetch_stock_data_alpha_vantage(ticker):
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            response = requests.get(base_url, params=params, timeout=10)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
-            data = response.json()
-    
-            if 'Time Series (Daily)' not in data:
-                raise ValueError(f"Invalid API response: {data.get('Note') or data.get('Error Message') or 'Unknown error'}")
-    
-            # Parse the JSON into a DataFrame
-            raw_data = data['Time Series (Daily)']
-            df = pd.DataFrame.from_dict(raw_data, orient='index').rename(columns={
-                '1. open': 'Open',
-                '2. high': 'High',
-                '3. low': 'Low',
-                '4. close': 'Close',
-                '5. volume': 'Volume'
+            
+            df = pd.read_csv(io.StringIO(response.text))
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df = df.rename(columns={
+                'timestamp': 'Date',
+                'open': 'Open',
+                'high': 'High',
+                'low': 'Low',
+                'close': 'Close',
+                'volume': 'Volume'
             })
-    
-            df.index = pd.to_datetime(df.index)
-            df = df.sort_index()
-            df = df.astype(float)
-            df.reset_index(inplace=True)
-            df.rename(columns={'index': 'Date'}, inplace=True)
-    
-            # Reorder columns
-            df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
-    
-            # Save to CSV
-            df.to_csv(csv_path, index=False)
-            print(f"✅ Data saved to {csv_path}")
-            break
-    
+            df = df.sort_values('Date')
+            return df
+        
         except Exception as e:
             print(f"⚠️ Attempt {attempt + 1} failed: {e}")
             time.sleep(5)
