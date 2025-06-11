@@ -50,6 +50,7 @@ def fetch_stock_data_alpha_vantage(ticker, api_key):
             df.reset_index(inplace=True)
             df.rename(columns={'index': 'Date'}, inplace=True)
             df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+            df['Date'] = pd.to_datetime(df['Date']).dt.floor('s')
             return df
         except Exception as e:
             st.warning(f"Attempt {attempt + 1} failed: {e}")
