@@ -125,9 +125,9 @@ if ticker and api_key:
 
             # Load trained model
             try:
-                model = load_model("keras_model.keras")
+                model = load_model("keras_model.h5")
             except Exception as e:
-                st.error(f"Could not load keras_model.keras: {e}")
+                st.error(f"Could not load keras_model.h5: {e}")
                 st.stop()
 
             # Prepare testing sequences
