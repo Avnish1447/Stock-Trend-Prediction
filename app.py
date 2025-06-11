@@ -19,37 +19,44 @@ def fetch_stock_data_alpha_vantage(ticker):
     )
 
     max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = requests.get(url)
-            if response.status_code != 200:
-                raise ValueError("Non-200 response")
+for attempt in range(max_retries):
+    try:
+        response = requests.get(base_url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
-            text = response.text
-            if "Error Message" in text or "Invalid API call" in text:
-                raise ValueError("Invalid API response or ticker")
-            if "Thank you for using Alpha Vantage" in text:
-                raise ValueError("Rate limit exceeded")
+        if 'Time Series (Daily)' not in data:
+            raise ValueError(f"Invalid API response: {data.get('Note') or data.get('Error Message') or 'Unknown error'}")
 
-            df = pd.read_csv(io.StringIO(text))
+        # Parse the JSON into a DataFrame
+        raw_data = data['Time Series (Daily)']
+        df = pd.DataFrame.from_dict(raw_data, orient='index').rename(columns={
+            '1. open': 'Open',
+            '2. high': 'High',
+            '3. low': 'Low',
+            '4. close': 'Close',
+            '5. volume': 'Volume'
+        })
 
-            # Validate necessary columns
-            required_cols = {'timestamp', 'close'}
-            if not required_cols.issubset(df.columns):
-                raise ValueError(f"Missing expected columns: {required_cols - set(df.columns)}")
+        df.index = pd.to_datetime(df.index)
+        df = df.sort_index()
+        df = df.astype(float)
+        df.reset_index(inplace=True)
+        df.rename(columns={'index': 'Date'}, inplace=True)
 
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
-            df = df.rename(columns={'timestamp': 'Date', 'close': 'Close'})
-            df = df.sort_values('Date')
-            df.reset_index(drop=True, inplace=True)
+        # Reorder columns
+        df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
 
-            return df[['Date', 'Close']]
+        # Save to CSV
+        df.to_csv(csv_path, index=False)
+        print(f"✅ Data saved to {csv_path}")
+        break
 
-        except Exception as e:
-            if attempt < max_retries - 1:
-                time.sleep(5)
-            else:
-                raise RuntimeError(f"❌ Failed to fetch data after {max_retries} attempts: {e}")
+    except Exception as e:
+        print(f"⚠️ Attempt {attempt + 1} failed: {e}")
+        time.sleep(5)
+else:
+    raise RuntimeError("❌ All download attempts failed.")
 
 def plot_close_price(df, ticker):
     fig, ax = plt.subplots(figsize=(12, 6))
