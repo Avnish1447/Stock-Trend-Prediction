@@ -7,14 +7,7 @@ from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 import requests
 
-st.set_page_config(page_title="📈 Stock Trend Prediction", layout="wide")
-
-st.set_page_config(
-    page_title="📈 Stock Trend Prediction",  # This sets the browser tab title
-    page_icon="📈",                          # Optional: sets the favicon (icon in the tab)
-    layout="centered",                       # Optional: layout can be "centered" or "wide"
-    initial_sidebar_state="auto"            # Optional: "auto", "expanded", or "collapsed"
-)
+st.set_page_config(page_title="📈 Stock Trend Prediction",page_icon="📈", layout="wide")
 
 
 st.title("📈 Stock Trend Prediction")
