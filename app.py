@@ -10,7 +10,7 @@ import requests
 st.set_page_config(page_title="📈 Stock Trend Prediction",page_icon="📈", layout="wide")
 
 
-st.title("📈 Stock Trend Prediction")
+st.title("Stock Trend Prediction")
 
 # User inputs
 ticker = st.text_input("Enter Stock Ticker", "AAPL").upper()
