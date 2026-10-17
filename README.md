@@ -1,18 +1,18 @@
 # 📈 Stock Trend Prediction App
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.32.0-brightgreen)](https://streamlit.io/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.14-orange)](https://www.tensorflow.org/)
-[![Alpha Vantage](https://img.shields.io/badge/Alpha%20Vantage-API-blue)](https://www.alphavantage.co/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-brightgreen)](https://streamlit.io/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15+-orange)](https://www.tensorflow.org/)
+[![Yahoo Finance](https://img.shields.io/badge/Yahoo%20Finance-yfinance-purple)](https://pypi.org/project/yfinance/)
 [![Deployed on Streamlit](https://img.shields.io/badge/Streamlit-Deployed-success?logo=streamlit&logoColor=white)](https://avnish-stock-trend-prediction.streamlit.app/)
 
 ---
 
 ## 📌 Overview
 
-🔮 **Stock Trend Prediction App** is a Streamlit-powered web interface that utilizes a pre-trained LSTM model to forecast stock closing prices. It provides interactive data visualizations, moving average analysis, and future trend predictions based on historical time-series data fetched from Alpha Vantage.
+🔮 **Stock Trend Prediction App** is a Streamlit-powered web interface that utilizes a pre-trained LSTM model to forecast stock closing prices. It provides interactive data visualizations, moving average analysis, and future trend predictions based on historical time-series data fetched seamlessly from Yahoo Finance (`yfinance`).
 
-> 🧠 The model (`keras_model.h5`) was trained using a Long Short-Term Memory (LSTM) architecture on historical stock data. The training pipeline is not included in this repository.
+> 🧠 The model (`keras_model.h5`) was trained using a Long Short-Term Memory (LSTM) architecture on historical stock data.
 
 🎯 Built for ML learners, finance enthusiasts, and academic or personal portfolio projects.
 
@@ -20,10 +20,10 @@
 
 ## ⚙️ Features
 
-- 📊 **Interactive Visualizations**: Plot raw closing prices, 100-day and 200-day moving averages  
-- 🧠 **LSTM Predictions**: Make predictions using a trained Long Short-Term Memory model  
-- 🔄 **Data Pipeline**: Download, preprocess, scale, and inverse transform data on-the-fly  
-- 🧮 **Real-Time Analysis**: View predictions and actual stock trends in real-time with visual overlays  
+- 📊 **Interactive Visualizations**: Interactive Plotly and Matplotlib charts for closing prices, 100-day and 200-day moving averages  
+- 🧠 **LSTM Predictions**: Forecast trends and next-day price projections using a trained Long Short-Term Memory model  
+- 📈 **Evaluation Metrics**: Real-time RMSE, MAE, and MAPE calculations on out-of-sample test data  
+- 🔄 **Zero-Config Data Pipeline**: Instant, free historical data via Yahoo Finance (`yfinance`) with no API keys or rate limit barriers  
 - 💡 **Educational Focus**: Designed for understanding deep learning in financial applications  
 
 ---
@@ -34,10 +34,10 @@
 |---------------------|---------------------|------|
 | Web Interface        | Streamlit           | ![Streamlit](https://img.shields.io/badge/Streamlit-E83E8C?style=flat&logo=streamlit&logoColor=white) |
 | Deep Learning Model  | TensorFlow / Keras  | ![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat&logo=tensorflow&logoColor=white) |
-| Financial Data       | Alpha Vantage API   | ![Alpha Vantage](https://img.shields.io/badge/Alpha%20Vantage-006699?style=flat&logo=alphavantage&logoColor=white) |
-| Visualization        | matplotlib          | ![Matplotlib](https://img.shields.io/badge/Matplotlib-11557C?style=flat&logo=plotly&logoColor=white) |
+| Financial Data       | Yahoo Finance (`yfinance`) | ![Yahoo](https://img.shields.io/badge/Yahoo%20Finance-6001D2?style=flat&logo=yahoo&logoColor=white) |
+| Visualization        | Plotly & Matplotlib | ![Plotly](https://img.shields.io/badge/Plotly-239120?style=flat&logo=plotly&logoColor=white) ![Matplotlib](https://img.shields.io/badge/Matplotlib-11557C?style=flat&logo=python&logoColor=white) |
 | Data Processing      | pandas, NumPy       | ![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat&logo=pandas&logoColor=white) ![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat&logo=numpy&logoColor=white) |
-| Scaling              | scikit-learn        | ![Scikit-learn](https://img.shields.io/badge/Scikit--Learn-F7931E?style=flat&logo=scikit-learn&logoColor=white) |
+| Scaling & Metrics    | scikit-learn        | ![Scikit-learn](https://img.shields.io/badge/Scikit--Learn-F7931E?style=flat&logo=scikit-learn&logoColor=white) |
 
 ---
 
@@ -116,29 +116,23 @@ The predictions made by this application are the result of a deep learning model
 
 * Model performance is limited by:
 
-  * Quantity and quality of historical data
-  * Latency or inaccuracies from third-party APIs (e.g., Alpha Vantage)
+  * Quantity and quality of historical market data
   * Lack of awareness of company fundamentals, breaking news, or macroeconomic indicators
-  * Overfitting or underfitting during training
+  * Overfitting or underfitting inherent to time-series forecasting models
 
 * It **does not account for**:
 
   * Intraday volatility
-  * Real-time data streams
-  * Sudden market shifts or geopolitical risks
-
-* ⚙️ **Alpha Vantage API Limitations**:
-
-  * Free tier usage is subject to **rate limits (typically 5 requests per minute and 500 per day)**.
-  * Repeated rapid queries may lead to temporary blocking of data access.
+  * Real-time streaming order book data
+  * Sudden market shifts, earnings surprises, or geopolitical events
 
 ### 📘 Use Responsibly:
 
 This project is intended to showcase:
 
 * Time series forecasting using LSTMs
-* Deployment using Streamlit
-* Real-world integration with APIs and visualizations
+* Interactive dashboard deployment using Streamlit and Plotly
+* End-to-end data processing, feature scaling, and inverse transformation pipelines
 
 **It is NOT designed for live trading, algorithmic execution, or portfolio management. Any usage beyond educational or research purposes is strongly discouraged.**
 
@@ -149,10 +143,10 @@ This project is intended to showcase:
 If deployed publicly, this app:
 
 * **Does not collect or store personal user data**
-* **Processes ticker inputs locally**
-* Relies on publicly accessible data via the Alpha Vantage API
+* **Processes ticker inputs locally in-session**
+* Relies on publicly accessible data via Yahoo Finance (`yfinance`)
 
-> Always validate external API input sources and sanitize ticker symbols in production.
+> Always validate external data input sources and sanitize ticker symbols in production.
 
 ---
 
