@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PULSE — 3D Neural Stock Intelligence & Spatial Forecasting</title>
+  <meta name="description" content="Award-winning 3D scroll-interactive experience powered by Three.js and recurrent LSTM memory topologies.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  </script>
+</head>
+<body>
+
+  <!-- Film Grain Overlay -->
+  <div class="film-grain"></div>
+
+  <!-- Three.js Fixed WebGL Viewport -->
+  <div id="webgl-canvas-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <!-- Telemetry HUD & Navigation -->
+  <header class="telemetry-nav">
+    <div class="brand-telemetry">
+      <span class="brand-logo-mark"></span>
+      <span>PULSE // NEURAL 3D</span>
+      <div class="hud-telemetry-badge">
+        <div class="hud-stat">SYS: <span>ONLINE</span></div>
+        <div class="hud-stat">LATENCY: <span id="hud-latency">14ms</span></div>
+        <div class="hud-stat">FPS: <span id="hud-fps">60</span></div>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="audio-toggle-btn" id="audio-toggle" aria-label="Toggle ambient frequency">
+        <div class="audio-bars">
+          <div class="audio-bar" style="height: 4px;"></div>
+          <div class="audio-bar" style="height: 8px;"></div>
+          <div class="audio-bar" style="height: 6px;"></div>
+        </div>
+        <span id="audio-label">AUDIO: OFF</span>
+      </button>
+
+      <div class="nav-model-pill">
+        <span class="live-pulse-dot"></span>
+        <span>LSTM 100-DAY LIVE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Scrollable Story Canvas -->
+  <main class="story-scroll-container">
+
+    <!-- MAIN DASHBOARD: SEARCH & LIVE PREDICTION COCKPIT -->
+    <section class="chapter-dashboard" id="dashboard">
+      <div class="dashboard-hero-wrap">
+        <div class="hero-meta-kicker">LSTM NEURAL ENGINE • 100-DAY HORIZON • T+1 INFERENCE</div>
+        <h1 class="hero-massive-title">NEURAL STOCK FORECAST</h1>
+        <p class="hero-description">
+          Enter any stock symbol to run real-time inference using recurrent LSTM memory topologies.
+        </p>
+
+        <!-- Prominent Stock Search Box -->
+        <div class="dashboard-search-container">
+          <form class="hero-search-form" id="stock-search-form">
+            <div class="search-input-shell">
+              <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="ticker-input" class="search-input" placeholder="Type stock symbol (e.g. NVDA, AAPL, TSLA, MSFT)..." autocomplete="off" spellcheck="false" value="AAPL">
+              <button type="submit" class="search-submit-btn" id="search-btn">
+                <span class="btn-text">RUN PREDICTION</span>
+                <span class="btn-loader" style="display: none;">INFERRING...</span>
+              </button>
+            </div>
+            <div class="quick-tickers-row">
+              <span class="quick-label">POPULAR:</span>
+              <button type="button" class="quick-chip active" data-symbol="AAPL">AAPL</button>
+              <button type="button" class="quick-chip" data-symbol="NVDA">NVDA</button>
+              <button type="button" class="quick-chip" data-symbol="TSLA">TSLA</button>
+              <button type="button" class="quick-chip" data-symbol="MSFT">MSFT</button>
+              <button type="button" class="quick-chip" data-symbol="AMZN">AMZN</button>
+              <button type="button" class="quick-chip" data-symbol="GOOGL">GOOGL</button>
+              <button type="button" class="quick-chip" data-symbol="META">META</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- The Main Interactive Dashboard Cockpit -->
+        <div class="interactive-glass-box" id="main-cockpit-card">
+          <div class="interactive-header-flex">
+            <div>
+              <div class="section-eyebrow">LIVE MARKET FEED // IN-MEMORY LSTM INFERENCE</div>
+              <h2 class="section-headline"><span id="cockpit-ticker">AAPL</span> // PERFORMANCE COCKPIT</h2>
+              <div class="cockpit-header-stats">
+                <div class="cockpit-stat-pill">LATEST CLOSE: <span id="cockpit-latest-price" style="color: #ffffff; font-weight: 600;">$0.00</span></div>
+                <div class="cockpit-stat-pill">24H CHANGE: <span id="cockpit-today-change" style="font-weight: 600;">+0.00%</span></div>
+                <div class="cockpit-stat-pill">52W HIGH: <span id="cockpit-52w-high" style="color: #ffffff;">$0.00</span></div>
+                <div class="cockpit-stat-pill">52W LOW: <span id="cockpit-52w-low" style="color: #ffffff;">$0.00</span></div>
+              </div>
+            </div>
+            <div class="cockpit-control-box">
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--neon-cyan); text-align: right;">
+                ● MODEL STATUS: IN-MEMORY CACHED
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); text-align: right;" id="eval-date-range">
+                EVALUATION HORIZON: 30% HOLDOUT
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Controls -->
+          <div class="chart-toggles-bar">
+            <span style="color: var(--text-dim); margin-right: 8px;">OVERLAYS:</span>
+            <button type="button" class="chart-toggle-btn active" id="toggle-ma100">100-DAY MA (RED)</button>
+            <button type="button" class="chart-toggle-btn active" id="toggle-ma200">200-DAY MA (GREEN)</button>
+            <div style="margin-left: auto; display: flex; gap: 14px; font-size: 11px;">
+              <span style="color: #2997ff;">━ ACTUAL CLOSE</span>
+              <span style="color: #ff9e00;">┉ LSTM PREDICTED</span>
+            </div>
+          </div>
+
+          <!-- High-Definition Interactive Dual SVG Canvas -->
+          <div style="width: 100%; height: 320px; background: rgba(0, 0, 0, 0.55); border-radius: 20px; border: 1px solid var(--border-glass); position: relative; overflow: hidden;" id="chart-viewport">
+            <div class="chart-tooltip-hud" id="chart-tooltip" style="display: none;">
+              <div id="tip-date" style="color: var(--neon-cyan); font-weight: 600; margin-bottom: 2px;">--</div>
+              <div id="tip-actual">ACTUAL: $0.00</div>
+              <div id="tip-pred" style="color: var(--neon-amber);">PRED: $0.00</div>
+              <div id="tip-error" style="color: var(--text-dim); font-size: 10px;">DEV: $0.00</div>
+            </div>
+
+            <svg id="interactive-wave-svg" width="100%" height="100%" viewBox="0 0 1000 320" preserveAspectRatio="none">
+              <!-- Grid Lines -->
+              <line x1="0" y1="80" x2="1000" y2="80" stroke="rgba(255,255,255,0.04)" stroke-width="1"></line>
+              <line x1="0" y1="160" x2="1000" y2="160" stroke="rgba(255,255,255,0.04)" stroke-width="1"></line>
+              <line x1="0" y1="240" x2="1000" y2="240" stroke="rgba(255,255,255,0.04)" stroke-width="1"></line>
+
+              <!-- Curve Paths -->
+              <path id="int-ma200-curve" d="" fill="none" stroke="#30d158" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.8"></path>
+              <path id="int-ma100-curve" d="" fill="none" stroke="#ff453a" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.8"></path>
+              <path id="int-actual-curve" d="" fill="none" stroke="#2997ff" stroke-width="2.5"></path>
+              <path id="int-pred-curve" d="" fill="none" stroke="#ff9e00" stroke-width="2.5" stroke-dasharray="5 3"></path>
+
+              <!-- Crosshair Indicator -->
+              <line id="crosshair-v" x1="0" y1="0" x2="0" y2="320" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-dasharray="3 3" style="display: none;"></line>
+              <circle id="int-crosshair-dot" cx="0" cy="0" r="6" fill="#00ff66" filter="drop-shadow(0 0 8px #00ff66)" style="display: none;"></circle>
+            </svg>
+          </div>
+
+          <!-- Telemetry KPI Cards -->
+          <div class="telemetry-readout-grid">
+            <div class="telemetry-cell">
+              <div class="telemetry-cell-label">NEXT-DAY PROJECTED CLOSE</div>
+              <div class="telemetry-cell-value" id="val-next-day" style="color: var(--neon-cyan);">$0.00</div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-cell-label">PROJECTED DELTA</div>
+              <div class="telemetry-cell-value" id="val-next-delta" style="color: var(--neon-emerald);">+0.00%</div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-cell-label">ROOT MEAN SQ ERROR (RMSE)</div>
+              <div class="telemetry-cell-value" id="val-rmse" style="color: #ffffff;">$0.00</div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-cell-label">MEAN ABS % ERROR (MAPE)</div>
+              <div class="telemetry-cell-value" id="val-mape" style="color: var(--neon-amber);">0.00%</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 24px; text-align: center;">
+            <a href="#dive" class="btn-view-chart">SCROLL TO EXPLORE 3D NEURAL ARCHITECTURE ↓</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 2: THE DEEP WEBGEL DIVE (PINNED STAGE ACROSS 400vh) -->
+    <section class="chapter-pinned-dive" id="dive">
+      <div class="pinned-stage-sticky">
+        <!-- Spatial Card 1 -->
+        <article class="spatial-hud-card" id="card-stage-1">
+          <div class="spatial-card-index">COORDINATE 01 // INGESTION</div>
+          <h2 class="spatial-card-title">Continuous Time Stream</h2>
+          <p class="spatial-card-body">
+            Raw Open, High, Low, Close, and Volume vectors form the spatial spine. Floating 3D candlestick meshes stream directly from high-frequency market APIs with zero artificial lag.
+          </p>
+          <div class="spatial-telemetry-tag">
+            <span>DIMENSION: [B, 100, 1]</span>
+            <span>INPUT: OHLCV TENSOR</span>
+          </div>
+        </article>
+
+        <!-- Spatial Card 2 -->
+        <article class="spatial-hud-card" id="card-stage-2">
+          <div class="spatial-card-index">COORDINATE 02 // SEQUENCE MEMORY</div>
+          <h2 class="spatial-card-title">100-Day Temporal Window</h2>
+          <p class="spatial-card-body">
+            Standard Markovian models assume the past doesn't matter. The LSTM lattice preserves quarterly cycles, earnings momentum, and volatility surface contractions over an unbroken 100-day window.
+          </p>
+          <div class="spatial-telemetry-tag">
+            <span>HORIZON: 100 DAYS</span>
+            <span>CELL DEPTH: 4 LAYERS</span>
+          </div>
+        </article>
+
+        <!-- Spatial Card 3 -->
+        <article class="spatial-hud-card" id="card-stage-3">
+          <div class="spatial-card-index">COORDINATE 03 // CONVERGENCE</div>
+          <h2 class="spatial-card-title">The Probability Vector</h2>
+          <p class="spatial-card-body">
+            Forget gates discard non-predictive noise. Candidate cells distill actionable alpha. At the focal singularity, mathematical inverse scaling projects tomorrow's closing price with confidence boundaries.
+          </p>
+          <div class="spatial-telemetry-tag">
+            <span>SCALING: INVERSE FIT</span>
+            <span>DELTA: T+1 PROJECTION</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- CHAPTER 3: HORIZONTAL 3D ENGINE SPECS (350vh HORIZONTAL SCRUB) -->
+    <section class="chapter-horizontal" id="engines">
+      <div class="horizontal-viewport">
+        <div class="horizontal-strip" id="horizontal-strip">
+          
+          <div class="engine-glass-panel">
+            <div>
+              <span class="engine-idx-tag">SPEC 01 // ARCHITECTURE</span>
+              <h3 class="engine-title">Deep Recurrent Stack</h3>
+              <p class="engine-desc">
+                Four stacked LSTM layers (50, 60, 80, 120 neurons) with interleaved spatial dropout to prevent historical overfitting.
+              </p>
+            </div>
+            <div class="engine-wireframe-slot">
+              <span style="color: var(--neon-cyan);">TOTAL PARAMS: 178,761</span>
+              <span>MEMORY FOOTPRINT: 698.3 KB</span>
+            </div>
+          </div>
+
+          <div class="engine-glass-panel">
+            <div>
+              <span class="engine-idx-tag">SPEC 02 // MATHEMATICS</span>
+              <h3 class="engine-title">Zero Data Leakage</h3>
+              <p class="engine-desc">
+                The scaler fits exclusively on training sets. Future distribution parameters never touch historical sequences.
+              </p>
+            </div>
+            <div class="engine-wireframe-slot">
+              <span style="color: var(--neon-emerald);">SCALER: MINMAX [0, 1]</span>
+              <span>INVERSE: (y - min_) / scale_</span>
+            </div>
+          </div>
+
+          <div class="engine-glass-panel">
+            <div>
+              <span class="engine-idx-tag">SPEC 03 // VELOCITY</span>
+              <h3 class="engine-title">Sub-Millisecond Execution</h3>
+              <p class="engine-desc">
+                Executes locally on device hardware without roundtrips to congested remote AI clusters.
+              </p>
+            </div>
+            <div class="engine-wireframe-slot">
+              <span style="color: var(--neon-purple);">LATENCY: &lt; 15MS</span>
+              <span>THREADING: METAL ACCELERATED</span>
+            </div>
+          </div>
+
+          <div class="engine-glass-panel">
+            <div>
+              <span class="engine-idx-tag">SPEC 04 // PIPELINE</span>
+              <h3 class="engine-title">Zero API Keys</h3>
+              <p class="engine-desc">
+                Standardized on open Yahoo Finance ingestion, completely eliminating Alpha Vantage rate limit blocks.
+              </p>
+            </div>
+            <div class="engine-wireframe-slot">
+              <span style="color: var(--neon-amber);">FEED: YAHOO FINANCE V8</span>
+              <span>STATUS: UNRESTRICTED</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER 4: KEYNOTE WORD SCRUB MANIFESTO -->
+    <section class="chapter-manifesto">
+      <blockquote class="manifesto-typography" id="manifesto-text">
+        Markets are not random walks. They are collective neural pulses of fear, greed, and momentum. We train machines to remember what humans forget.
+      </blockquote>
+    </section>
+
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div>PULSE NEURAL // 3D TIME-SERIES TOPOLOGY</div>
+    <div>THREE.JS WEBGL • GSAP SCROLLTRIGGER • APPLE HIG</div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
