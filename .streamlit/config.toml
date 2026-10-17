@@ -1,8 +1,7 @@
 [server]
 headless = true
-enableCORS = false
 port = 8501
-runOnSave = true  # optional: auto-reload when code changes (useful during dev)
+runOnSave = true
 
 [browser]
 gatherUsageStats = false
@@ -12,4 +11,3 @@ primaryColor = "#4B8BBE"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F0F2F6"
 textColor = "#262730"
-
