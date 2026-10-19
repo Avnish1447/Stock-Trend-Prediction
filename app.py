@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from tensorflow.keras.models import load_model
 import yfinance as yf
 
 # Page setup
@@ -43,14 +42,35 @@ start_date = col_start.date_input("Start Date", value=default_start)
 end_date = col_end.date_input("End Date", value=today)
 
 
+class ONNXModelWrapper:
+    def __init__(self, session):
+        self.session = session
+        self.input_name = session.get_inputs()[0].name
+        self.output_name = session.get_outputs()[0].name
+
+    def predict(self, x, verbose=0):
+        return self.session.run([self.output_name], {self.input_name: np.array(x, dtype=np.float32)})[0]
+
+
 @st.cache_resource
 def get_lstm_model():
-    """Load and cache the pre-trained LSTM model."""
+    """Load and cache the pre-trained LSTM model (preferring fast ONNX, falling back to Keras)."""
+    # 1. Try ONNX model first (< 1MB, fast inference)
+    if os.path.exists("model.onnx"):
+        try:
+            import onnxruntime as ort
+            session = ort.InferenceSession("model.onnx")
+            return ONNXModelWrapper(session)
+        except Exception as e:
+            pass
+
+    # 2. Fallback to Keras model
     try:
+        from tensorflow.keras.models import load_model
         model = load_model("keras_model.h5")
         return model
     except Exception as e:
-        st.error(f"Failed to load LSTM model ('keras_model.h5'): {e}")
+        st.error(f"Failed to load model ('model.onnx' or 'keras_model.h5'): {e}")
         return None
 
 
