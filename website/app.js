@@ -566,85 +566,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==========================================
-  // 9. AMBIENT 432Hz SYNTHESIZED KEYNOTE HUM (WEB AUDIO API)
+  // 5. MAIN RENDER LOOP (THREE.JS WEBGL)
   // ==========================================
-  const audioToggle = document.getElementById("audio-toggle");
-  const audioLabel = document.getElementById("audio-label");
-  let audioCtx = null;
-  let oscillator = null;
-  let gainNode = null;
-  let isAudioPlaying = false;
-
-  if (audioToggle) {
-    audioToggle.addEventListener("click", () => {
-      if (!isAudioPlaying) {
-        try {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          oscillator = audioCtx.createOscillator();
-          gainNode = audioCtx.createGain();
-
-          const filter = audioCtx.createBiquadFilter();
-          filter.type = "lowpass";
-          filter.frequency.setValueAtTime(320, audioCtx.currentTime);
-
-          oscillator.type = "sine";
-          oscillator.frequency.setValueAtTime(432, audioCtx.currentTime); // 432 Hz soothing harmonic
-
-          gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-          gainNode.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 2); // Soft volume
-
-          oscillator.connect(filter);
-          filter.connect(gainNode);
-          gainNode.connect(audioCtx.destination);
-
-          oscillator.start();
-          isAudioPlaying = true;
-          audioLabel.textContent = "AUDIO: 432Hz ON";
-          audioToggle.style.borderColor = "var(--neon-cyan)";
-        } catch (e) {
-          console.warn("Web Audio API not allowed without user gesture:", e);
-        }
-      } else {
-        if (gainNode && audioCtx) {
-          gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-          setTimeout(() => {
-            if (oscillator) oscillator.stop();
-            isAudioPlaying = false;
-            audioLabel.textContent = "AUDIO: OFF";
-            audioToggle.style.borderColor = "var(--border-glass)";
-          }, 500);
-        }
-      }
-    });
-  }
-
-  // ==========================================
-  // 10. CLI COPY BUTTON
-  // ==========================================
-  const cliCopy = document.getElementById("cli-copy");
-  if (cliCopy) {
-    cliCopy.addEventListener("click", () => {
-      navigator.clipboard.writeText("streamlit run app.py");
-      cliCopy.textContent = "COPIED TO CLIPBOARD!";
-      setTimeout(() => {
-        cliCopy.textContent = "COPY COMMAND";
-      }, 2000);
-    });
-  }
-
-  // ==========================================
-  // 11. MAIN RENDER LOOP & PERFORMANCE TELEMETRY
-  // ==========================================
-  let frameCount = 0;
-  let lastTime = performance.now();
-  const hudFps = document.getElementById("hud-fps");
-
   const clock = new THREE.Clock();
 
   function animate() {
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta();
     const elapsedTime = clock.getElapsedTime();
 
     // Mouse tilt lerp
@@ -669,15 +597,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Render WebGL
     renderer.render(scene, camera);
-
-    // Telemetry FPS Counter
-    frameCount++;
-    const now = performance.now();
-    if (now - lastTime >= 1000) {
-      if (hudFps) hudFps.textContent = frameCount;
-      frameCount = 0;
-      lastTime = now;
-    }
   }
 
   animate();
