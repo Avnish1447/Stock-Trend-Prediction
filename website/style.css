@@ -103,58 +103,10 @@ html, body {
   box-shadow: 0 0 15px var(--neon-cyan);
 }
 
-.hud-telemetry-badge {
-  color: var(--text-dim);
-  display: flex;
-  gap: 20px;
-  font-size: 11px;
-}
-
-.hud-stat span {
-  color: var(--text-white);
-  font-weight: 600;
-}
-
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.audio-toggle-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-glass);
-  color: var(--text-white);
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.25s ease;
-  backdrop-filter: blur(20px);
-}
-
-.audio-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: var(--border-focus);
-}
-
-.audio-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 10px;
-}
-
-.audio-bar {
-  width: 2px;
-  height: 100%;
-  background: var(--neon-cyan);
-  border-radius: 1px;
-  transition: height 0.2s;
 }
 
 .nav-model-pill {
