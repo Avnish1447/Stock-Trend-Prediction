@@ -6,18 +6,33 @@ import yfinance as yf
 from flask import Flask, jsonify, request, send_from_directory
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from tensorflow.keras.models import load_model
 
 app = Flask(__name__, static_folder="website")
 
-# Preload model in memory
-print("Loading LSTM model (keras_model.h5)...")
-model = None
-try:
-    model = load_model("keras_model.h5")
-    print("LSTM Model loaded successfully into memory!")
-except Exception as e:
-    print(f"Warning: Could not load keras_model.h5: {e}")
+# Preload model in memory (Prefer lightweight ONNX runtime, fallback to Keras)
+onnx_session = None
+input_name = None
+output_name = None
+keras_model = None
+
+onnx_path = os.path.join(os.path.dirname(__file__), "model.onnx")
+if os.path.exists(onnx_path):
+    try:
+        import onnxruntime as ort
+        onnx_session = ort.InferenceSession(onnx_path)
+        input_name = onnx_session.get_inputs()[0].name
+        output_name = onnx_session.get_outputs()[0].name
+        print("Model loaded successfully via ONNX Runtime (< 1MB lightweight)!")
+    except Exception as e:
+        print(f"Could not load ONNX model: {e}")
+
+if onnx_session is None and os.path.exists("keras_model.h5"):
+    try:
+        from tensorflow.keras.models import load_model
+        keras_model = load_model("keras_model.h5")
+        print("Fallback: Keras model loaded successfully!")
+    except Exception as e:
+        print(f"Warning: Could not load keras_model.h5: {e}")
 
 
 @app.route("/")
@@ -32,7 +47,7 @@ def static_files(path):
 
 @app.route("/api/predict", methods=["GET", "POST"])
 def predict_stock():
-    if model is None:
+    if onnx_session is None and keras_model is None:
         return jsonify({"error": "LSTM model not loaded"}), 500
 
     ticker = request.args.get("ticker", "").strip().upper()
@@ -80,10 +95,14 @@ def predict_stock():
             x_test.append(input_data[i - 100:i])
             y_test.append(input_data[i, 0])
 
-        x_test = np.array(x_test)
+        x_test = np.array(x_test, dtype=np.float32)
         y_test = np.array(y_test)
 
-        y_predicted = model.predict(x_test, verbose=0)
+        if onnx_session is not None:
+            y_predicted = onnx_session.run([output_name], {input_name: x_test})[0]
+        else:
+            y_predicted = keras_model.predict(x_test, verbose=0)
+
         y_pred_inv = scaler.inverse_transform(y_predicted).flatten()
         y_test_inv = scaler.inverse_transform(y_test.reshape(-1, 1)).flatten()
 
@@ -96,8 +115,12 @@ def predict_stock():
 
         # Next-Day Forecast projection
         last_100_days = df["Close"].tail(100).values.reshape(-1, 1)
-        next_scaled = model.predict(scaler.transform(last_100_days).reshape(1, 100, 1), verbose=0)
-        next_day_pred = float(scaler.inverse_transform(next_scaled)[0, 0])
+        next_scaled = scaler.transform(last_100_days).reshape(1, 100, 1).astype(np.float32)
+
+        if onnx_session is not None:
+            next_day_pred = float(scaler.inverse_transform(onnx_session.run([output_name], {input_name: next_scaled})[0])[0, 0])
+        else:
+            next_day_pred = float(scaler.inverse_transform(keras_model.predict(next_scaled, verbose=0))[0, 0])
 
         latest_close = float(df["Close"].iloc[-1])
         prev_close = float(df["Close"].iloc[-2])
