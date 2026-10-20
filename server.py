@@ -1,5 +1,9 @@
 import os
 import datetime
+import urllib.request
+import urllib.parse
+import ssl
+import json
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -58,12 +62,44 @@ POPULAR_COMPANIES = {
     "WMT": "Walmart Inc.",
     "BA": "The Boeing Company",
     "CRM": "Salesforce, Inc.",
-    "UBER": "Uber Technologies, Inc."
+    "UBER": "Uber Technologies, Inc.",
+    "^NSEI": "NIFTY 50",
+    "^BSESN": "BSE SENSEX",
+    "^NSEBANK": "NIFTY Bank",
+    "RELIANCE.NS": "Reliance Industries Limited",
+    "TCS.NS": "Tata Consultancy Services Ltd.",
+    "INFY.NS": "Infosys Limited",
+    "HDFCBANK.NS": "HDFC Bank Limited",
+    "TATAMOTORS.NS": "Tata Motors Limited",
+    "ICICIBANK.NS": "ICICI Bank Limited",
+    "SBIN.NS": "State Bank of India"
+}
+
+INDEX_ALIASES = {
+    "NIFTY": "^NSEI",
+    "NIFTY50": "^NSEI",
+    "NIFTY 50": "^NSEI",
+    "BANKNIFTY": "^NSEBANK",
+    "NIFTYBANK": "^NSEBANK",
+    "SENSEX": "^BSESN",
+    "FINNIFTY": "^CNXFIN",
+    "MIDCPNIFTY": "^NSEMDCP50",
+    "SP500": "^GSPC",
+    "S&P500": "^GSPC",
+    "NASDAQ": "^IXIC",
+    "DOW": "^DJI",
+    "RUT": "^RUT",
+    "BTC": "BTC-USD",
+    "BITCOIN": "BTC-USD",
+    "ETH": "ETH-USD"
 }
 
 def resolve_company_name(ticker, ticker_obj=None):
     if ticker in POPULAR_COMPANIES:
         return POPULAR_COMPANIES[ticker]
+    clean_sym = ticker.replace(".NS", "").replace(".BO", "")
+    if clean_sym in POPULAR_COMPANIES:
+        return POPULAR_COMPANIES[clean_sym]
     if ticker_obj is not None:
         try:
             name = ticker_obj.info.get("shortName") or ticker_obj.info.get("longName")
@@ -72,6 +108,107 @@ def resolve_company_name(ticker, ticker_obj=None):
         except Exception:
             pass
     return ticker
+
+
+def search_symbols(query, max_results=6):
+    if not query or len(query.strip()) < 1:
+        return []
+    query = query.strip()
+    q_upper = query.upper()
+    
+    results = []
+    # 1. Direct index alias check
+    if q_upper in INDEX_ALIASES:
+        sym = INDEX_ALIASES[q_upper]
+        results.append({
+            "symbol": sym,
+            "name": POPULAR_COMPANIES.get(sym, f"{q_upper} Index"),
+            "exchange": "INDEX",
+            "type": "INDEX",
+            "logo": f"https://assets.parqet.com/logos/symbol/{sym}"
+        })
+
+    # 2. Query Yahoo Finance Search API
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={urllib.parse.quote(query)}&quotesCount={max_results + 3}&newsCount=0"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+    
+    try:
+        with urllib.request.urlopen(req, context=ctx, timeout=3) as resp:
+            data = json.loads(resp.read().decode())
+            quotes = data.get("quotes", [])
+            for q in quotes:
+                sym = q.get("symbol", "")
+                if not sym or any(r["symbol"] == sym for r in results):
+                    continue
+                quote_type = q.get("quoteType", "")
+                name = q.get("shortname") or q.get("longname") or sym
+                exch = q.get("exchDisp") or q.get("exchange") or ""
+                results.append({
+                    "symbol": sym,
+                    "name": name,
+                    "exchange": exch,
+                    "type": quote_type,
+                    "logo": f"https://assets.parqet.com/logos/symbol/{sym}"
+                })
+    except Exception as e:
+        print(f"Search API error: {e}")
+    
+    return results[:max_results]
+
+
+def fetch_history_with_fallback(raw_ticker, period="5y"):
+    clean = raw_ticker.strip().upper()
+    candidates = []
+
+    # 1. Check alias dictionary
+    if clean in INDEX_ALIASES:
+        candidates.append(INDEX_ALIASES[clean])
+
+    candidates.append(clean)
+
+    # 2. Auto-suffix candidates for Indian stock exchanges
+    if "." not in clean and not clean.startswith("^"):
+        candidates.append(f"{clean}.NS")
+        candidates.append(f"{clean}.BO")
+
+    df = pd.DataFrame()
+    resolved_ticker = clean
+    resolved_obj = None
+
+    for cand in candidates:
+        try:
+            t_obj = yf.Ticker(cand)
+            temp_df = t_obj.history(period=period)
+            if not temp_df.empty and len(temp_df) >= 150:
+                df = temp_df
+                resolved_ticker = cand
+                resolved_obj = t_obj
+                break
+        except Exception:
+            continue
+
+    # 3. If still empty, search query lookup
+    if df.empty or len(df) < 150:
+        matches = search_symbols(raw_ticker, max_results=3)
+        for m in matches:
+            sym = m.get("symbol")
+            if sym and sym not in candidates:
+                try:
+                    t_obj = yf.Ticker(sym)
+                    temp_df = t_obj.history(period=period)
+                    if not temp_df.empty and len(temp_df) >= 150:
+                        df = temp_df
+                        resolved_ticker = sym
+                        resolved_obj = t_obj
+                        break
+                except Exception:
+                    continue
+
+    return df, resolved_ticker, resolved_obj
 
 
 @app.route("/")
@@ -84,34 +221,31 @@ def static_files(path):
     return send_from_directory("website", path)
 
 
+@app.route("/api/search")
+def api_search():
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify([])
+    return jsonify(search_symbols(q, max_results=6))
+
+
 @app.route("/api/predict", methods=["GET", "POST"])
 def predict_stock():
     if onnx_session is None and keras_model is None:
         return jsonify({"error": "LSTM model not loaded"}), 500
 
-    ticker = request.args.get("ticker", "").strip().upper()
-    if not ticker and request.is_json:
-        ticker = request.json.get("ticker", "").strip().upper()
-    if not ticker:
-        ticker = "AAPL"
+    raw_ticker = request.args.get("ticker", "").strip()
+    if not raw_ticker and request.is_json:
+        raw_ticker = request.json.get("ticker", "").strip()
+    if not raw_ticker:
+        raw_ticker = "AAPL"
 
     try:
-        import time
-        df = pd.DataFrame()
-        # Fetch 5 years of daily data with retries
-        for attempt in range(3):
-            try:
-                ticker_obj = yf.Ticker(ticker)
-                df = ticker_obj.history(period="5y")
-                if not df.empty and len(df) >= 150:
-                    break
-            except Exception:
-                pass
-            time.sleep(1)
+        df, ticker, ticker_obj = fetch_history_with_fallback(raw_ticker, period="5y")
 
         if df.empty or len(df) < 150:
             return jsonify({
-                "error": f"Insufficient price data found for ticker '{ticker}' (at least 150 trading days required)."
+                "error": f"Insufficient historical data for '{raw_ticker}'. Please verify the stock ticker or select from suggestions."
             }), 400
 
         df.reset_index(inplace=True)
