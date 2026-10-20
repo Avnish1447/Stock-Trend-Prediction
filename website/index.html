@@ -58,11 +58,20 @@
           <form class="hero-search-form" id="stock-search-form">
             <div class="search-input-shell">
               <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" id="ticker-input" class="search-input" placeholder="Type stock symbol (e.g. NVDA, AAPL, TSLA, MSFT)..." autocomplete="off" spellcheck="false" value="AAPL">
+              <input type="text" id="ticker-input" class="search-input" placeholder="Search stock symbol, company name or index (e.g. AAPL, Reliance, NIFTY)..." autocomplete="off" spellcheck="false" value="AAPL">
               <button type="submit" class="search-submit-btn" id="search-btn">
                 <span class="btn-text">RUN PREDICTION</span>
                 <span class="btn-loader" style="display: none;">INFERRING...</span>
               </button>
+
+              <!-- Spotlight Autocomplete Dropdown -->
+              <div class="search-autocomplete-dropdown" id="search-autocomplete-dropdown" style="display: none;">
+                <div class="autocomplete-header">
+                  <span>MARKET SUGGESTIONS</span>
+                  <span style="font-size: 10px; color: var(--text-dim);">↑↓ TO NAVIGATE • ↵ TO SELECT</span>
+                </div>
+                <div class="autocomplete-list" id="autocomplete-results"></div>
+              </div>
             </div>
             <div class="quick-tickers-row">
               <span class="quick-label">POPULAR:</span>
