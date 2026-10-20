@@ -313,12 +313,23 @@ html, body {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-glass);
   color: var(--text-dim);
-  padding: 4px 12px;
+  padding: 5px 12px;
   border-radius: 9999px;
   font-family: var(--font-mono);
   font-size: 11px;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip-mini-logo {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
 }
 
 .quick-chip:hover, .quick-chip.active {
@@ -519,6 +530,88 @@ html, body {
   margin-bottom: 24px;
 }
 
+.cockpit-brand-flex {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cockpit-logo-card {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--specular), 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 10px;
+  box-sizing: border-box;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+}
+
+.cockpit-logo-card:hover {
+  transform: translateY(-2px) scale(1.04);
+  border-color: var(--neon-cyan);
+}
+
+.cockpit-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.25s ease;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+}
+
+.cockpit-logo-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.15) 0%, rgba(157, 78, 221, 0.2) 100%);
+  border-radius: 12px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+}
+
+.cockpit-brand-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.cockpit-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.cockpit-company-badge {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+  white-space: nowrap;
+}
+
 .section-eyebrow {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -533,6 +626,7 @@ html, body {
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
+  margin: 0;
 }
 
 .scrubber-axis-row {
