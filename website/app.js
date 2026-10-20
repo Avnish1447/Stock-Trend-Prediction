@@ -617,10 +617,143 @@ document.addEventListener("DOMContentLoaded", () => {
     gsap.to(neuralSphere.scale, { x: 1.3, y: 1.3, z: 1.3, duration: 0.4, yoyo: true, repeat: 1 });
   }
 
+  // ==========================================
+  // SPOTLIGHT AUTOCOMPLETE SEARCH CONTROLLER
+  // ==========================================
+  const searchDropdown = document.getElementById("search-autocomplete-dropdown");
+  const autocompleteResults = document.getElementById("autocomplete-results");
+  let searchDebounceTimer = null;
+  let selectedIndex = -1;
+  let currentResults = [];
+
+  function closeAutocomplete() {
+    if (searchDropdown) {
+      searchDropdown.style.display = "none";
+    }
+    selectedIndex = -1;
+  }
+
+  function renderAutocompleteItems(items) {
+    currentResults = items;
+    selectedIndex = -1;
+    if (!autocompleteResults || !searchDropdown) return;
+
+    if (!items || items.length === 0) {
+      searchDropdown.style.display = "none";
+      return;
+    }
+
+    autocompleteResults.innerHTML = "";
+    items.forEach((item, idx) => {
+      const el = document.createElement("div");
+      el.className = "autocomplete-item";
+      el.dataset.index = idx;
+      el.dataset.symbol = item.symbol;
+
+      const fallbackInitials = (item.symbol.replace(/[\^.]/g, "").slice(0, 4) || "STK").toUpperCase();
+
+      el.innerHTML = `
+        <div class="autocomplete-item-logo">
+          <img src="https://assets.parqet.com/logos/symbol/${encodeURIComponent(item.symbol)}" 
+               alt="${item.symbol}" 
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="autocomplete-item-fallback" style="display: none;">${fallbackInitials}</div>
+        </div>
+        <div class="autocomplete-item-info">
+          <div class="autocomplete-symbol-row">
+            <span class="autocomplete-symbol">${item.symbol}</span>
+            ${item.exchange ? `<span class="autocomplete-exchange">${item.exchange}</span>` : ""}
+          </div>
+          <div class="autocomplete-name">${item.name || item.symbol}</div>
+        </div>
+        <div class="autocomplete-action-arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </div>
+      `;
+
+      el.addEventListener("click", () => {
+        selectAutocompleteItem(item);
+      });
+
+      autocompleteResults.appendChild(el);
+    });
+
+    searchDropdown.style.display = "block";
+  }
+
+  function selectAutocompleteItem(item) {
+    if (tickerInput) tickerInput.value = item.symbol;
+    closeAutocomplete();
+    runPrediction(item.symbol, true);
+  }
+
+  function updateSelectedAutocompleteItem(items) {
+    items.forEach((item, idx) => {
+      item.classList.toggle("selected", idx === selectedIndex);
+      if (idx === selectedIndex) {
+        item.scrollIntoView({ block: "nearest" });
+      }
+    });
+  }
+
+  if (tickerInput) {
+    tickerInput.addEventListener("input", (e) => {
+      const q = e.target.value.trim();
+      clearTimeout(searchDebounceTimer);
+
+      if (q.length < 1) {
+        closeAutocomplete();
+        return;
+      }
+
+      searchDebounceTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+          if (res.ok) {
+            const data = await res.json();
+            renderAutocompleteItems(data);
+          }
+        } catch (err) {
+          console.warn("Autocomplete search error:", err);
+        }
+      }, 200);
+    });
+
+    tickerInput.addEventListener("keydown", (e) => {
+      const items = autocompleteResults ? autocompleteResults.querySelectorAll(".autocomplete-item") : [];
+      if (!items || items.length === 0 || searchDropdown.style.display === "none") return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % items.length;
+        updateSelectedAutocompleteItem(items);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+        updateSelectedAutocompleteItem(items);
+      } else if (e.key === "Enter" && selectedIndex >= 0 && selectedIndex < currentResults.length) {
+        e.preventDefault();
+        selectAutocompleteItem(currentResults[selectedIndex]);
+      } else if (e.key === "Escape") {
+        closeAutocomplete();
+      }
+    });
+  }
+
+  // Click outside to close autocomplete
+  document.addEventListener("click", (e) => {
+    if (searchDropdown && !e.target.closest(".search-input-shell")) {
+      closeAutocomplete();
+    }
+  });
+
   // Bind Hero Search Form Submit
   if (searchForm) {
     searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
+      closeAutocomplete();
       const sym = tickerInput ? tickerInput.value.trim() : "AAPL";
       runPrediction(sym, true);
     });
@@ -629,6 +762,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Bind Quick Chips Click
   quickChips.forEach(chip => {
     chip.addEventListener("click", () => {
+      closeAutocomplete();
       const sym = chip.dataset.symbol;
       if (tickerInput) tickerInput.value = sym;
       runPrediction(sym, true);
