@@ -124,5 +124,23 @@ class TestModelAndPipeline(unittest.TestCase):
         data = response.get_json()
         self.assertIn("error", data)
 
+    def test_07_api_search_and_smart_resolution(self):
+        """Verify /api/search returns results and /api/predict auto-resolves Indian stocks and indices."""
+        # 1. Search endpoint
+        search_res = self.client.get("/api/search?q=reliance")
+        self.assertEqual(search_res.status_code, 200)
+        items = search_res.get_json()
+        self.assertIsInstance(items, list)
+        self.assertGreater(len(items), 0)
+        self.assertIn("symbol", items[0])
+
+        # 2. Smart auto-resolution for RELIANCE -> RELIANCE.NS
+        predict_res = self.client.get("/api/predict?ticker=RELIANCE")
+        self.assertEqual(predict_res.status_code, 200)
+        pred_data = predict_res.get_json()
+        self.assertEqual(pred_data["ticker"], "RELIANCE.NS")
+        self.assertIn("Reliance", pred_data["company_name"])
+
 if __name__ == "__main__":
     unittest.main()
+
