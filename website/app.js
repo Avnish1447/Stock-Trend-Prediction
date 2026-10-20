@@ -236,6 +236,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const quickChips = document.querySelectorAll(".quick-chip");
 
   const cockpitTicker = document.getElementById("cockpit-ticker");
+  const cockpitCompanyLogo = document.getElementById("cockpit-company-logo");
+  const cockpitLogoFallback = document.getElementById("cockpit-logo-fallback");
+  const cockpitCompanyName = document.getElementById("cockpit-company-name");
   const cockpitLatestPrice = document.getElementById("cockpit-latest-price");
   const cockpitTodayChange = document.getElementById("cockpit-today-change");
   const cockpit52wHigh = document.getElementById("cockpit-52w-high");
@@ -244,6 +247,61 @@ document.addEventListener("DOMContentLoaded", () => {
   const valNextDelta = document.getElementById("val-next-delta");
   const valRmse = document.getElementById("val-rmse");
   const valMape = document.getElementById("val-mape");
+
+  const KNOWN_COMPANIES = {
+    "AAPL": "Apple Inc.",
+    "NVDA": "NVIDIA Corporation",
+    "TSLA": "Tesla, Inc.",
+    "MSFT": "Microsoft Corporation",
+    "AMZN": "Amazon.com, Inc.",
+    "GOOGL": "Alphabet Inc.",
+    "GOOG": "Alphabet Inc.",
+    "META": "Meta Platforms, Inc.",
+    "NFLX": "Netflix, Inc.",
+    "AMD": "Advanced Micro Devices, Inc.",
+    "INTC": "Intel Corporation",
+    "SPY": "SPDR S&P 500 ETF Trust",
+    "QQQ": "Invesco QQQ Trust",
+    "COIN": "Coinbase Global, Inc.",
+    "PLTR": "Palantir Technologies Inc.",
+    "BABA": "Alibaba Group Holding Ltd.",
+    "DIS": "The Walt Disney Company",
+    "JPM": "JPMorgan Chase & Co.",
+    "V": "Visa Inc.",
+    "WMT": "Walmart Inc.",
+    "BA": "The Boeing Company",
+    "CRM": "Salesforce, Inc.",
+    "UBER": "Uber Technologies, Inc."
+  };
+
+  function updateCockpitLogo(symbol, companyName) {
+    symbol = (symbol || "AAPL").trim().toUpperCase();
+    const resolvedName = companyName || KNOWN_COMPANIES[symbol] || symbol;
+
+    if (cockpitCompanyName) {
+      cockpitCompanyName.textContent = resolvedName;
+    }
+
+    if (cockpitCompanyLogo && cockpitLogoFallback) {
+      const primaryUrl = `https://assets.parqet.com/logos/symbol/${encodeURIComponent(symbol)}`;
+
+      cockpitCompanyLogo.style.opacity = "0";
+      cockpitCompanyLogo.onload = () => {
+        cockpitCompanyLogo.style.display = "block";
+        cockpitLogoFallback.style.display = "none";
+        cockpitCompanyLogo.style.opacity = "1";
+      };
+
+      cockpitCompanyLogo.onerror = () => {
+        cockpitCompanyLogo.style.display = "none";
+        cockpitLogoFallback.style.display = "flex";
+        cockpitLogoFallback.textContent = symbol.slice(0, 4);
+      };
+
+      cockpitCompanyLogo.src = primaryUrl;
+      cockpitCompanyLogo.alt = `${symbol} logo`;
+    }
+  }
 
   const chartViewport = document.getElementById("chart-viewport");
   const actualCurve = document.getElementById("int-actual-curve");
@@ -284,6 +342,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function runPrediction(symbol, scrollToResults = false) {
     if (!symbol) symbol = "AAPL";
     symbol = symbol.trim().toUpperCase();
+
+    // Optimistically update logo and ticker name right away
+    updateCockpitLogo(symbol);
 
     // Button loading state
     if (searchBtn) {
@@ -332,8 +393,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const cockpitInput = document.getElementById("cockpit-ticker-input");
       if (cockpitInput) cockpitInput.value = data.ticker;
 
-      // Update Cockpit Header
+      // Update Cockpit Header & Company Logo
       if (cockpitTicker) cockpitTicker.textContent = data.ticker;
+      updateCockpitLogo(data.ticker, data.company_name);
       if (cockpitLatestPrice) cockpitLatestPrice.textContent = `$${data.latest_close.toFixed(2)}`;
       if (cockpitTodayChange) {
         const sign = data.pct_change >= 0 ? "+" : "";
@@ -345,13 +407,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Update KPI Cards
       if (valNextDay) valNextDay.textContent = `$${data.next_day_pred.toFixed(2)}`;
+      const labelNextDay = document.getElementById("label-next-day");
+      if (labelNextDay && data.next_trading_day) {
+        labelNextDay.textContent = `PROJECTED CLOSE (${data.next_trading_day})`;
+      }
       if (valNextDelta) {
         const dSign = data.next_day_pct >= 0 ? "+" : "";
         valNextDelta.textContent = `${dSign}${data.next_day_change.toFixed(2)} (${dSign}${data.next_day_pct.toFixed(2)}%)`;
         valNextDelta.style.color = data.next_day_pct >= 0 ? "var(--neon-emerald)" : "#ff3b30";
       }
+
+      // Update 5-day horizon trend & conviction
+      const label5dHorizon = document.getElementById("label-5d-horizon");
+      const val5dTrend = document.getElementById("val-5d-trend");
+      const valConviction = document.getElementById("val-conviction");
+
+      if (label5dHorizon && data.trend_5d_target_date) {
+        label5dHorizon.textContent = `5-DAY HORIZON (${data.trend_5d_target_date})`;
+      }
+      if (val5dTrend && data.trend_5d_pred !== undefined) {
+        const tSign = data.trend_5d_pct >= 0 ? "+" : "";
+        val5dTrend.textContent = `$${data.trend_5d_pred.toFixed(2)} (${tSign}${data.trend_5d_pct.toFixed(2)}%)`;
+        val5dTrend.style.color = data.trend_5d_pct >= 0 ? "var(--neon-emerald)" : "#ff3b30";
+      }
+      if (valConviction && data.conviction_level) {
+        valConviction.textContent = data.conviction_level;
+        valConviction.style.color = data.conviction_level.includes("HIGH") ? "var(--neon-emerald)" : (data.conviction_level.includes("MODERATE") ? "var(--neon-cyan)" : "var(--neon-amber)");
+      }
+
       if (valRmse) valRmse.textContent = `$${data.rmse.toFixed(2)}`;
       if (valMape) valMape.textContent = `${data.mape.toFixed(2)}%`;
+
+      const evalDateRange = document.getElementById("eval-date-range");
+      if (evalDateRange) {
+        const d1 = data.directional_accuracy ? `1D ACC: ${data.directional_accuracy.toFixed(1)}%` : "";
+        const d5 = data.directional_accuracy_5d ? ` • 5D ACC: ${data.directional_accuracy_5d.toFixed(1)}%` : "";
+        evalDateRange.textContent = `EVALUATION: 30% HOLDOUT • ${d1}${d5}`;
+      }
 
       // Render the SVG Charts with real test data
       renderRealDualChart(data);
@@ -395,24 +487,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderRealDualChart(data) {
     const comparison = data.test_comparison;
-    const history = data.recent_history;
     if (!comparison || comparison.length === 0) return;
 
     const width = 1000;
     const height = 320;
     const padding = 20;
 
-    // Determine min and max price across comparison & history
+    // Determine min and max price across all aligned series
     const allPrices = [
       ...comparison.map(c => c.actual),
       ...comparison.map(c => c.predicted)
     ];
-    if (history) {
-      history.forEach(h => {
-        if (h.ma100) allPrices.push(h.ma100);
-        if (h.ma200) allPrices.push(h.ma200);
-      });
-    }
+    comparison.forEach(c => {
+      if (c.ma100 !== null && c.ma100 !== undefined) allPrices.push(c.ma100);
+      if (c.ma200 !== null && c.ma200 !== undefined) allPrices.push(c.ma200);
+    });
 
     const minPrice = Math.min(...allPrices) * 0.96;
     const maxPrice = Math.max(...allPrices) * 1.04;
@@ -434,29 +523,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (predCurve) predCurve.setAttribute("d", predD);
 
-    // 3. Build MA100 & MA200 if history available
-    if (history && history.length > 0) {
-      let ma100D = "";
-      let ma200D = "";
-      let first100 = true;
-      let first200 = true;
+    // 3. Build MA100 & MA200 curves strictly synchronized on identical test dates
+    let ma100D = "";
+    let ma200D = "";
+    let first100 = true;
+    let first200 = true;
 
-      for (let k = 0; k < history.length; k++) {
-        const x = scaleX(k, history.length);
-        if (history[k].ma100) {
-          const y100 = scaleY(history[k].ma100);
-          ma100D += first100 ? `M ${x} ${y100}` : ` L ${x} ${y100}`;
-          first100 = false;
-        }
-        if (history[k].ma200) {
-          const y200 = scaleY(history[k].ma200);
-          ma200D += first200 ? `M ${x} ${y200}` : ` L ${x} ${y200}`;
-          first200 = false;
-        }
+    for (let k = 0; k < comparison.length; k++) {
+      const x = scaleX(k, comparison.length);
+      if (comparison[k].ma100 !== null && comparison[k].ma100 !== undefined) {
+        const y100 = scaleY(comparison[k].ma100);
+        ma100D += first100 ? `M ${x} ${y100}` : ` L ${x} ${y100}`;
+        first100 = false;
       }
-      if (ma100Curve) ma100Curve.setAttribute("d", ma100D);
-      if (ma200Curve) ma200Curve.setAttribute("d", ma200D);
+      if (comparison[k].ma200 !== null && comparison[k].ma200 !== undefined) {
+        const y200 = scaleY(comparison[k].ma200);
+        ma200D += first200 ? `M ${x} ${y200}` : ` L ${x} ${y200}`;
+        first200 = false;
+      }
     }
+    if (ma100Curve) ma100Curve.setAttribute("d", ma100D);
+    if (ma200Curve) ma200Curve.setAttribute("d", ma200D);
   }
 
   // Chart hover crosshair interaction
