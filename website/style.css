@@ -213,6 +213,8 @@ html, body {
   width: 100%;
   max-width: 680px;
   margin: 0 auto 24px;
+  position: relative;
+  z-index: 100;
 }
 
 /* Apple Liquid Glass Stock Search Bar */
@@ -222,6 +224,8 @@ html, body {
   flex-direction: column;
   align-items: center;
   gap: 14px;
+  position: relative;
+  z-index: 100;
 }
 
 .search-input-shell {
@@ -237,6 +241,7 @@ html, body {
   padding: 6px 8px 6px 20px;
   transition: all 0.3s ease;
   position: relative;
+  z-index: 120;
 }
 
 /* Spotlight Autocomplete Dropdown */
@@ -246,7 +251,7 @@ html, body {
   left: 0;
   right: 0;
   width: 100%;
-  background: rgba(18, 18, 26, 0.92);
+  background: rgba(18, 18, 26, 0.96);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -254,7 +259,7 @@ html, body {
   border-radius: 20px;
   padding: 10px;
   box-sizing: border-box;
-  z-index: 1000;
+  z-index: 9999;
   text-align: left;
 }
 
@@ -450,6 +455,8 @@ html, body {
   margin-top: 18px;
   max-width: 100%;
   box-sizing: border-box;
+  position: relative;
+  z-index: 10;
 }
 
 .quick-label {
@@ -708,6 +715,8 @@ html, body {
   box-shadow: var(--specular), 0 30px 80px rgba(0, 0, 0, 0.7);
   box-sizing: border-box;
   text-align: left;
+  position: relative;
+  z-index: 5;
 }
 
 .interactive-header-flex {
