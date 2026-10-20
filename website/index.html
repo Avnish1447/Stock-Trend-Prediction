@@ -66,13 +66,27 @@
             </div>
             <div class="quick-tickers-row">
               <span class="quick-label">POPULAR:</span>
-              <button type="button" class="quick-chip active" data-symbol="AAPL">AAPL</button>
-              <button type="button" class="quick-chip" data-symbol="NVDA">NVDA</button>
-              <button type="button" class="quick-chip" data-symbol="TSLA">TSLA</button>
-              <button type="button" class="quick-chip" data-symbol="MSFT">MSFT</button>
-              <button type="button" class="quick-chip" data-symbol="AMZN">AMZN</button>
-              <button type="button" class="quick-chip" data-symbol="GOOGL">GOOGL</button>
-              <button type="button" class="quick-chip" data-symbol="META">META</button>
+              <button type="button" class="quick-chip active" data-symbol="AAPL">
+                <img src="https://assets.parqet.com/logos/symbol/AAPL" class="chip-mini-logo" alt="" />AAPL
+              </button>
+              <button type="button" class="quick-chip" data-symbol="NVDA">
+                <img src="https://assets.parqet.com/logos/symbol/NVDA" class="chip-mini-logo" alt="" />NVDA
+              </button>
+              <button type="button" class="quick-chip" data-symbol="TSLA">
+                <img src="https://assets.parqet.com/logos/symbol/TSLA" class="chip-mini-logo" alt="" />TSLA
+              </button>
+              <button type="button" class="quick-chip" data-symbol="MSFT">
+                <img src="https://assets.parqet.com/logos/symbol/MSFT" class="chip-mini-logo" alt="" />MSFT
+              </button>
+              <button type="button" class="quick-chip" data-symbol="AMZN">
+                <img src="https://assets.parqet.com/logos/symbol/AMZN" class="chip-mini-logo" alt="" />AMZN
+              </button>
+              <button type="button" class="quick-chip" data-symbol="GOOGL">
+                <img src="https://assets.parqet.com/logos/symbol/GOOGL" class="chip-mini-logo" alt="" />GOOGL
+              </button>
+              <button type="button" class="quick-chip" data-symbol="META">
+                <img src="https://assets.parqet.com/logos/symbol/META" class="chip-mini-logo" alt="" />META
+              </button>
             </div>
           </form>
         </div>
@@ -80,14 +94,23 @@
         <!-- The Main Interactive Dashboard Cockpit -->
         <div class="interactive-glass-box" id="main-cockpit-card">
           <div class="interactive-header-flex">
-            <div>
-              <div class="section-eyebrow">LIVE MARKET FEED // IN-MEMORY LSTM INFERENCE</div>
-              <h2 class="section-headline"><span id="cockpit-ticker">AAPL</span> // PERFORMANCE COCKPIT</h2>
-              <div class="cockpit-header-stats">
-                <div class="cockpit-stat-pill">LATEST CLOSE: <span id="cockpit-latest-price" style="color: #ffffff; font-weight: 600;">$0.00</span></div>
-                <div class="cockpit-stat-pill">24H CHANGE: <span id="cockpit-today-change" style="font-weight: 600;">+0.00%</span></div>
-                <div class="cockpit-stat-pill">52W HIGH: <span id="cockpit-52w-high" style="color: #ffffff;">$0.00</span></div>
-                <div class="cockpit-stat-pill">52W LOW: <span id="cockpit-52w-low" style="color: #ffffff;">$0.00</span></div>
+            <div class="cockpit-brand-flex">
+              <div class="cockpit-logo-card" id="cockpit-logo-container">
+                <img id="cockpit-company-logo" src="https://assets.parqet.com/logos/symbol/AAPL" alt="AAPL" class="cockpit-logo-img" />
+                <div id="cockpit-logo-fallback" class="cockpit-logo-fallback" style="display: none;">AAPL</div>
+              </div>
+              <div class="cockpit-brand-details">
+                <div class="section-eyebrow">LIVE MARKET FEED // IN-MEMORY LSTM INFERENCE</div>
+                <div class="cockpit-title-row">
+                  <h2 class="section-headline"><span id="cockpit-ticker">AAPL</span></h2>
+                  <span class="cockpit-company-badge" id="cockpit-company-name">Apple Inc.</span>
+                </div>
+                <div class="cockpit-header-stats">
+                  <div class="cockpit-stat-pill">LATEST CLOSE: <span id="cockpit-latest-price" style="color: #ffffff; font-weight: 600;">$0.00</span></div>
+                  <div class="cockpit-stat-pill">24H CHANGE: <span id="cockpit-today-change" style="font-weight: 600;">+0.00%</span></div>
+                  <div class="cockpit-stat-pill">52W HIGH: <span id="cockpit-52w-high" style="color: #ffffff;">$0.00</span></div>
+                  <div class="cockpit-stat-pill">52W LOW: <span id="cockpit-52w-low" style="color: #ffffff;">$0.00</span></div>
+                </div>
               </div>
             </div>
             <div class="cockpit-control-box">
@@ -141,12 +164,20 @@
           <!-- Telemetry KPI Cards -->
           <div class="telemetry-readout-grid">
             <div class="telemetry-cell">
-              <div class="telemetry-cell-label">NEXT-DAY PROJECTED CLOSE</div>
+              <div class="telemetry-cell-label" id="label-next-day">NEXT-DAY PROJECTED CLOSE</div>
               <div class="telemetry-cell-value" id="val-next-day" style="color: var(--neon-cyan);">$0.00</div>
             </div>
             <div class="telemetry-cell">
               <div class="telemetry-cell-label">PROJECTED DELTA</div>
               <div class="telemetry-cell-value" id="val-next-delta" style="color: var(--neon-emerald);">+0.00%</div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-cell-label" id="label-5d-horizon">5-DAY WEEKLY TREND</div>
+              <div class="telemetry-cell-value" id="val-5d-trend" style="color: #ffffff;">$0.00 (+0.00%)</div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-cell-label">SIGNAL CONVICTION</div>
+              <div class="telemetry-cell-value" id="val-conviction" style="color: var(--neon-cyan); font-size: 15px;">BALANCED</div>
             </div>
             <div class="telemetry-cell">
               <div class="telemetry-cell-label">ROOT MEAN SQ ERROR (RMSE)</div>
