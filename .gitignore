@@ -228,3 +228,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+
+# Local research scratch and backups
+scratch/
+backup/
+
