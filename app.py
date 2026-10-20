@@ -174,61 +174,83 @@ def render_dashboard():
             return
 
         with st.spinner("Processing test dataset and evaluating LSTM predictions..."):
-            # 70% Training / 30% Testing split
+            # 70% Training / 30% Testing split strictly chronologically
             train_size = int(len(df) * 0.70)
-            data_training = pd.DataFrame(df['Close'].iloc[0:train_size])
-            data_testing = pd.DataFrame(df['Close'].iloc[train_size:])
+            closes = df['Close'].values
 
-            # Fit scaler ONLY on training data to prevent data leakage
-            scaler = MinMaxScaler(feature_range=(0, 1))
-            scaler.fit(data_training)
+            x_test = []
+            curr_prices = []
+            actual_prices = []
+            test_dates = []
 
-            # Prepare testing window sequences
-            past_100_days = data_training.tail(100)
-            final_df = pd.concat([past_100_days, data_testing], ignore_index=True)
-            input_data = scaler.transform(final_df)  # Proper transform without refit
-
-            x_test, y_test = [], []
-            for i in range(100, input_data.shape[0]):
-                x_test.append(input_data[i - 100:i])
-                y_test.append(input_data[i, 0])
-
-            x_test = np.array(x_test)
-            y_test = np.array(y_test)
+            for i in range(train_size, len(df)):
+                window = closes[i - 100:i]
+                curr_p = float(window[-1])
+                if curr_p <= 0:
+                    continue
+                # Stationary local window normalization (zero data leakage)
+                norm_w = (window / curr_p) - 1.0
+                x_test.append(norm_w.reshape(100, 1))
+                curr_prices.append(curr_p)
+                actual_prices.append(float(closes[i]))
+                test_dates.append(df['Date'].iloc[i])
 
             if len(x_test) == 0:
                 st.warning("Insufficient test sequences generated. Try extending the date range.")
                 return
 
-            # Generate predictions
-            y_predicted = model.predict(x_test, verbose=0)
+            x_test = np.array(x_test, dtype=np.float32)
+            curr_prices = np.array(curr_prices)
+            actual_prices = np.array(actual_prices)
 
-            # Mathematically accurate inverse scaling
-            y_predicted_inv = scaler.inverse_transform(y_predicted).flatten()
-            y_test_inv = scaler.inverse_transform(y_test.reshape(-1, 1)).flatten()
+            # Generate predictions (returns relative to anchor close)
+            pred_returns = model.predict(x_test, verbose=0).flatten()
+            y_predicted_inv = curr_prices * (1.0 + pred_returns)
+            y_test_inv = actual_prices
 
-            # Align testing dates accurately
-            test_dates = df['Date'].iloc[train_size:].reset_index(drop=True)
+            # Performance Metrics
+            rmse = float(np.sqrt(mean_squared_error(y_test_inv, y_predicted_inv)))
+            mae = float(mean_absolute_error(y_test_inv, y_predicted_inv))
+            mape = float(np.mean(np.abs((y_test_inv - y_predicted_inv) / y_test_inv)) * 100)
+            dir_acc = float(np.mean(np.sign(y_test_inv - curr_prices) == np.sign(y_predicted_inv - curr_prices)) * 100)
 
-            # Metrics
-            rmse = np.sqrt(mean_squared_error(y_test_inv, y_predicted_inv))
-            mae = mean_absolute_error(y_test_inv, y_predicted_inv)
-            mape = np.mean(np.abs((y_test_inv - y_predicted_inv) / y_test_inv)) * 100
-
-            # Next-Day Forecast
-            last_100_days = df['Close'].tail(100).values.reshape(-1, 1)
-            last_100_scaled = scaler.transform(last_100_days).reshape(1, 100, 1)
-            next_day_scaled = model.predict(last_100_scaled, verbose=0)
-            next_day_pred = float(scaler.inverse_transform(next_day_scaled)[0, 0])
+            # Next-Day Forecast projection from latest market observation
+            last_100 = closes[-100:]
+            latest_close = float(last_100[-1])
+            last_norm = ((last_100 / latest_close) - 1.0).reshape(1, 100, 1).astype(np.float32)
+            next_day_ret = float(model.predict(last_norm, verbose=0)[0, 0])
+            next_day_pred = float(latest_close * (1.0 + next_day_ret))
             next_day_change = next_day_pred - latest_close
-            next_day_pct = (next_day_change / latest_close) * 100
+            next_day_pct = next_day_ret * 100
+
+            # Calculate exact next trading day & 5-day horizon
+            latest_dt = df['Date'].iloc[-1]
+            next_trading_day = pd.bdate_range(latest_dt, periods=2)[1].strftime("%Y-%m-%d")
+            trend_5d_date = pd.bdate_range(latest_dt, periods=6)[-1].strftime("%Y-%m-%d")
+
+            ma20 = float(np.mean(closes[-20:]))
+            ma20_ratio = (latest_close / ma20) - 1.0
+            vol_20 = float(np.std(np.diff(closes[-20:]) / closes[-20:-1]))
+            trend_5d_ret = float(np.clip(5.0 * next_day_ret + 0.3 * ma20_ratio, -0.15, 0.15))
+            trend_5d_pred = float(latest_close * (1.0 + trend_5d_ret))
+            trend_5d_change = trend_5d_pred - latest_close
+            trend_5d_pct = float(trend_5d_ret * 100)
+
+            z_score = abs(next_day_ret) / (vol_20 + 1e-6)
+            if z_score >= 0.08 and np.sign(next_day_ret) == np.sign(ma20_ratio):
+                conviction = "HIGH"
+            elif z_score >= 0.04:
+                conviction = "MODERATE"
+            else:
+                conviction = "BALANCED"
 
         # Forecast KPI Cards
-        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-        kpi1.metric("Next Day Projected Close", f"${next_day_pred:,.2f}", f"{next_day_change:+,.2f} ({next_day_pct:+.2f}%)")
-        kpi2.metric("Root Mean Squared Error (RMSE)", f"${rmse:.2f}")
-        kpi3.metric("Mean Absolute Error (MAE)", f"${mae:.2f}")
-        kpi4.metric("Mean Absolute % Error (MAPE)", f"{mape:.2f}%")
+        kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
+        kpi1.metric(f"Next Day ({next_trading_day})", f"${next_day_pred:,.2f}", f"{next_day_change:+,.2f} ({next_day_pct:+.2f}%)")
+        kpi2.metric(f"5-Day Trend ({trend_5d_date})", f"${trend_5d_pred:,.2f}", f"{trend_5d_change:+,.2f} ({trend_5d_pct:+.2f}%)")
+        kpi3.metric("Conviction", conviction)
+        kpi4.metric("RMSE / MAE", f"${rmse:.2f} / ${mae:.2f}")
+        kpi5.metric("1D Hit Rate", f"{dir_acc:.1f}%")
 
         # Interactive Comparison Plot
         pred_fig = go.Figure()
