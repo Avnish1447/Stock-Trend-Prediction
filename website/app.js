@@ -20,14 +20,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   let lenis = null;
   if (!isReducedMotion && typeof Lenis !== "undefined") {
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
     lenis = new Lenis({
-      duration: 1.2,
+      duration: isTouch ? 0.9 : 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: "vertical",
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1.1,
-      touchMultiplier: 2,
+      touchMultiplier: 1.0, // 1:1 physics prevents unnatural scroll fling on touchscreens
+      syncTouch: false,
     });
 
     lenis.scrollTo(0, { immediate: true });
@@ -52,13 +54,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x030305, 0.035);
 
+  const isMobileViewport = () => window.innerWidth < 640;
+
   const camera = new THREE.PerspectiveCamera(
-    60,
+    isMobileViewport() ? 68 : 60,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
   );
-  camera.position.set(0, 0, 32);
+  camera.position.set(0, 0, isMobileViewport() ? 36 : 32);
 
   const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
@@ -546,13 +550,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ma200Curve) ma200Curve.setAttribute("d", ma200D);
   }
 
-  // Chart hover crosshair interaction
+  // Chart pointer / touch / hover crosshair interaction
   if (chartViewport) {
-    chartViewport.addEventListener("mousemove", (e) => {
+    const handleChartPointer = (clientX) => {
       if (!currentPredictionData || !currentPredictionData.test_comparison) return;
 
       const rect = chartViewport.getBoundingClientRect();
-      const relX = e.clientX - rect.left;
+      const relX = clientX - rect.left;
       const pct = Math.max(0, Math.min(1, relX / rect.width));
 
       const comparison = currentPredictionData.test_comparison;
@@ -596,13 +600,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const err = Math.abs(pt.actual - pt.predicted).toFixed(2);
         tipError.textContent = `DEV: $${err}`;
       }
-    });
+    };
 
-    chartViewport.addEventListener("mouseleave", () => {
+    const hideChartPointer = () => {
       if (crosshairV) crosshairV.style.display = "none";
       if (crosshairDot) crosshairDot.style.display = "none";
       if (chartTooltip) chartTooltip.style.display = "none";
+    };
+
+    chartViewport.addEventListener("pointerdown", (e) => {
+      handleChartPointer(e.clientX);
     });
+
+    chartViewport.addEventListener("pointermove", (e) => {
+      handleChartPointer(e.clientX);
+    });
+
+    chartViewport.addEventListener("pointerleave", hideChartPointer);
+    chartViewport.addEventListener("pointercancel", hideChartPointer);
   }
 
   function morph3DSceneForStock(data) {
@@ -684,7 +699,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function selectAutocompleteItem(item) {
-    if (tickerInput) tickerInput.value = item.symbol;
+    if (tickerInput) {
+      tickerInput.value = item.symbol;
+      tickerInput.blur();
+    }
     closeAutocomplete();
     runPrediction(item.symbol, true);
   }
@@ -754,6 +772,7 @@ document.addEventListener("DOMContentLoaded", () => {
     searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
       closeAutocomplete();
+      if (tickerInput) tickerInput.blur();
       const sym = tickerInput ? tickerInput.value.trim() : "AAPL";
       runPrediction(sym, true);
     });
@@ -764,7 +783,10 @@ document.addEventListener("DOMContentLoaded", () => {
     chip.addEventListener("click", () => {
       closeAutocomplete();
       const sym = chip.dataset.symbol;
-      if (tickerInput) tickerInput.value = sym;
+      if (tickerInput) {
+        tickerInput.value = sym;
+        tickerInput.blur();
+      }
       runPrediction(sym, true);
     });
   });
@@ -822,8 +844,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   animate();
 
-  // Resize handler
+  // Resize handler with mobile portrait FOV recalculation
   window.addEventListener("resize", () => {
+    const mobile = isMobileViewport();
+    camera.fov = mobile ? 68 : 60;
+    camera.position.z = mobile ? 36 : 32;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
